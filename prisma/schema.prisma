@@ -6,3 +6,56 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserStatus{
+active
+suspended
+}
+
+enum KeyStatus{
+active
+revoked
+}
+
+enum Plan{ 
+ free 
+ pro 
+ enterprise 
+ }
+model User{ 
+id String @id @default(uuid()) 
+email String @unique 
+password String   
+status UserStatus
+created_at DateTime @default(now())
+plan Plan
+api_keys ApiKey[]
+logs RequestLog[]
+} 
+ 
+model ApiKey{ 
+id String @id @default(uuid()) 
+user_id String 
+user User @relation(fields: [user_id], references: [id])
+name String
+key_hash String
+rate_limit Int  
+status KeyStatus
+expires_at DateTime?
+created_at DateTime @default(now())
+logs RequestLog[]
+} 
+
+model RequestLog{ 
+id String @id @default(uuid()) 
+api_key_id String
+api_key ApiKey @relation(fields:[api_key_id], references:[id])
+user_id String 
+user User @relation(fields: [user_id], references: [id])
+endpoint String
+method String
+status_code Int
+latency_ms Int
+ip_address String
+created_at DateTime @default(now())
+}
